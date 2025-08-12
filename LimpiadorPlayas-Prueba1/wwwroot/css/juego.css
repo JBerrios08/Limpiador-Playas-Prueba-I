@@ -1,0 +1,10 @@
+﻿/* wwwroot/css/juego.css */
+.escenario {
+    touch-action: manipulation;
+    background: #cfe9ff; /* color cielo/agua */
+}
+
+.residuo, .fauna {
+    z-index: 2;
+    user-select: none;
+}

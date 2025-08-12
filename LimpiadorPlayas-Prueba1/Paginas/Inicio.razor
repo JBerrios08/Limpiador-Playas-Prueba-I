@@ -1,0 +1,14 @@
+﻿@page "/"
+@inject NavigationManager Nav
+
+<h1 class="text-center text-primary">🌊 Limpiador de Playas</h1>
+
+<div class="text-center my-4">
+    <button class="btn btn-success btn-lg" @onclick="Iniciar">
+        <i class="bi bi-play-fill"></i> Iniciar Juego
+    </button>
+</div>
+
+@code {
+    void Iniciar() => Nav.NavigateTo("/juego?nivel=1");
+}

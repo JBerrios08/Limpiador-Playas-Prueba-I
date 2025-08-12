@@ -1,0 +1,139 @@
+﻿@page "/juego"
+@inject NavigationManager Nav
+@inject EstadoJuego Estado
+@implements IDisposable
+
+@code {
+    [Parameter, SupplyParameterFromQuery] public int nivel { get; set; } = 1;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Estado.Inicializar(nivel, Nav);   // inicializa con el nivel recibido
+        Estado.CambioEstado += Refrescar;
+        await Estado.IniciarNivelAsync();        // arranca el bucle del nivel
+    }
+
+    void Refrescar() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Estado.CambioEstado -= Refrescar;
+        Estado.Dispose();
+    }
+}
+
+<div class="container-fluid py-2 border-bottom bg-light">
+    <div class="row g-2 align-items-center">
+        <div class="col-auto">
+            <span class="badge text-bg-primary">Nivel @Estado.Nivel</span>
+        </div>
+        <div class="col">
+            <div class="progress" role="progressbar" aria-label="Tiempo">
+                <div class="progress-bar" style="width:@Estado.PorcentajeTiempo%;">@Estado.SegundosRestantes s</div>
+            </div>
+        </div>
+        <div class="col-auto">
+            <span class="me-3"><i class="bi bi-star-fill"></i> Puntos: <strong>@Estado.Puntos</strong></span>
+            <span class="me-3">
+                <i class="bi bi-heart-pulse"></i> Arrecife:
+                <span class="badge text-bg-success">@Estado.SaludArrecife</span>
+            </span>
+            <span>
+                <i class="bi bi-bullseye"></i> Precisión:
+                <span class="badge text-bg-info">@($"{Estado.PrecisionClasificacion:P0}")</span>
+            </span>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid py-3">
+    <div class="row">
+        <!-- Escena -->
+        <div class="col-12 col-lg-8">
+            <div class="escenario position-relative w-100 border rounded overflow-hidden user-select-none"
+                 style="aspect-ratio:16/9;">
+
+                <img src="img/fondos/nivel@Estado.Nivel-escritorio.jpg"
+                     class="position-absolute top-0 start-0 w-100 h-100"
+                     style="object-fit:cover; z-index:0;" />
+
+                @foreach (var r in Estado.Residuos)
+                {
+                    <img src="@r.RutaSprite" class="position-absolute residuo"
+                         style="@Estado.Estilo(r)"
+                         @onpointerdown="() => Estado.Presionar(r.Id)"
+                         @onpointerup="() => Estado.Soltar(r.Id)"
+                         @onclick="() => Estado.Toque(r.Id)"
+                         draggable="false" />
+                }
+
+                @foreach (var f in Estado.Faunas)
+                {
+                    <img src="@f.RutaSprite" class="position-absolute fauna"
+                         style="@Estado.Estilo(f)" draggable="false" />
+                }
+
+                @if (Estado.SuperposicionClasificar.Visible)
+                {
+                    <div class="position-absolute card shadow-sm p-2"
+                         style="@Estado.SuperposicionClasificar.Estilo">
+                        <div class="btn-group btn-group-sm d-flex">
+                            @foreach (var op in Estado.SuperposicionClasificar.Opciones)
+                            {
+                                <button class="btn btn-outline-primary flex-fill"
+                                        @onclick="() => Estado.Clasificar(op)">
+                                    @op
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                @if (Estado.BandaEvento is not null)
+                {
+                    <div class="position-absolute top-0 start-50 translate-middle-x mt-2">
+                        <span class="badge text-bg-warning px-3 py-2 shadow">@Estado.BandaEvento</span>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Panel lateral -->
+        <div class="col-12 col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">Clasificación rápida</div>
+                <div class="card-body">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="pinzaToggle" @bind="Estado.ModoPinza">
+                        <label class="form-check-label" for="pinzaToggle"><i class="bi bi-tools"></i> Modo “Pinza”</label>
+                    </div>
+                    <div class="mt-3 small">
+                        <p class="mb-1"><strong>Combo:</strong> @Estado.EtiquetaCombo</p>
+                        <p class="mb-1">Evita dañar fauna/corales</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Footer -->
+<div class="container-fluid py-2 border-top">
+    <div class="d-flex gap-2 justify-content-center">
+        <button class="btn btn-secondary" @onclick="Estado.PausarReanudar">
+            @(Estado.Pausado ? "Reanudar" : "Pausar")
+        </button>
+        <button class="btn btn-warning" @onclick="@(() => Nav.NavigateTo($"/juego?nivel={Estado.Nivel}", true))">
+            Reintentar
+        </button>
+        <button class="btn btn-success" @onclick="@(() => Nav.NavigateTo("/menu"))">
+            Siguiente
+        </button>
+    </div>
+</div>
+
+<!-- Sonidos -->
+<audio id="sonido-recoger" src="sonidos/recoger.mp3" preload="auto"></audio>
+<audio id="sonido-error" src="sonidos/error.mp3" preload="auto"></audio>
+<audio id="sonido-fauna" src="sonidos/fauna.mp3" preload="auto"></audio>
+<audio id="sonido-evento" src="sonidos/evento.mp3" preload="auto"></audio>

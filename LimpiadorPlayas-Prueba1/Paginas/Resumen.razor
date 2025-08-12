@@ -1,0 +1,25 @@
+﻿@page "/resumen"
+
+<h3>Resumen del Nivel</h3>
+
+<p>Nivel: @Nivel</p>
+<p>Puntos: @Puntos</p>
+<p>Limpieza: @Limpieza%</p>
+<p>Precisión: @Precisión%</p>
+<p>Salud del Arrecife: @SaludArrecife%</p>
+<p>Victoria: @(Victoria == 1 ? "Sí" : "No")</p>
+
+@code {
+    [Parameter] public int Nivel { get; set; }
+    [Parameter] public int Puntos { get; set; }
+    [Parameter] public int Limpieza { get; set; }
+    [Parameter] public int Precisión { get; set; }
+    [Parameter] public int SaludArrecife { get; set; }
+    [Parameter] public int Victoria { get; set; }
+
+    protected override Task OnInitializedAsync()
+    {
+        Console.WriteLine($"Nivel: {Nivel}, Puntos: {Puntos}, Limpieza: {Limpieza}, Precisión: {Precisión}, SaludArrecife: {SaludArrecife}, Victoria: {Victoria}");
+        return base.OnInitializedAsync();
+    }
+}
